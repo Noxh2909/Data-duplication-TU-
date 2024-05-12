@@ -11,7 +11,7 @@ import pandas as pd
 import re
 
 name_column_index = 1
-
+#test
 def generate_blocking_key(row: pd.Series):
     patterns = [
         r"\b[A-Z0-9]{2,10}-[A-Z0-9]{2,10}\b",
