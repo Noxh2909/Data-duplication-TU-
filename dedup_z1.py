@@ -9,7 +9,6 @@ from collections import defaultdict
 from tqdm import tqdm
 import pandas as pd
 import re
-#check #check 
 
 name_column_index = 1
 
