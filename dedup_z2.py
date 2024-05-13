@@ -11,25 +11,23 @@ import pandas as pd
 import numpy as np
 import re
 
-name_column_index = 1 
+name_column_name = 1 
+name_column_price = 2
+name_column_brand = 3
 
 def generate_blocking_key(row: pd.Series):
     patterns = [
-        r"\b[A-Z0-9]{2,10}-[A-Z0-9]{2,10}\b",
-        r"\b\d+\s?(GB|MB|TB|GHz|MHz)\b",
-        r"\b\w+\b",
-        r"\b[vV]er\.?\s?[0-9]+(\.[0-9]+)?\b",
-        r"\b[A-Z0-9]+[-_][A-Z0-9]+[-_][A-Z0-9]+\b",
-        r"\b(?:ID|Code|Part)\s?#?:?\s?[A-Z0-9]+\b",
+        r"\b[A-Z0-9]{2,10}-[A-Z0-9]{2,10}\b",  # Specific product codes
+        r"\b\w+\b",                            # Any word
     ]
     keys = []
-    if pd.notna(row[name_column_index]):
+    if pd.notna(row[name_column_name]):
         for pattern in patterns:
-            matches = re.findall(pattern, str(row[name_column_index]), re.IGNORECASE)
+            matches = re.findall(pattern, str(row[name_column_name]), re.IGNORECASE)
             keys.extend([match.lower() for match in matches])
     if not keys:
         return ''
-    return ' '.join(sorted(set(keys)))  # Combining and sorting keys
+    return ' '.join(sorted(set(keys)))  # Combining and sorting keys 
 
 def create_blocks(df: pd.DataFrame):
     '''
