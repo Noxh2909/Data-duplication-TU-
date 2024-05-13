@@ -11,11 +11,15 @@ import pandas as pd
 import re
 
 name_column_index = 1
+<<<<<<< HEAD
 
 name_column_name = 1 
 name_column_price = 2
 name_column_brand = 3
 
+=======
+#test
+>>>>>>> 4b9a83b95020037a3ae60377422f0f27ef7990bc
 def generate_blocking_key(row: pd.Series):
     pattern_names = [
         r"\b[A-Z0-9]{2,10}-[A-Z0-9]{2,10}\b",
