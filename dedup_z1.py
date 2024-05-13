@@ -12,22 +12,45 @@ import re
 
 name_column_index = 1
 
+name_column_name = 1 
+name_column_price = 2
+name_column_brand = 3
+
 def generate_blocking_key(row: pd.Series):
-    patterns = [
+    pattern_names = [
         r"\b[A-Z0-9]{2,10}-[A-Z0-9]{2,10}\b",
         r"\b\d+\s?(GB|MB|TB|GHz|MHz)\b",
         r"\b\w+\b",
         r"\b[vV]er\.?\s?[0-9]+(\.[0-9]+)?\b",
         r"\b[A-Z0-9]+[-_][A-Z0-9]+[-_][A-Z0-9]+\b",
         r"\b(?:ID|Code|Part)\s?#?:?\s?[A-Z0-9]+\b",
+        r"\b\d+GB\b", 
+        r"\b\d+MB/s\b",  
+        r"USB\s?\d+\.\d+", 
+        r"\bSDXC\b|\bSDHC\b|\bMicroSDHC\b|\bMicroSDXC\b", 
+        r"\bUHS-I\b|\bUHS-II\b", 
+        r"\b\d{3,4}x\b", 
+        r"\bV\d+\b", 
+        r"Class\s?\d+", 
+        r"\b\d+MB\b", 
+        r"\b\d+\s?GB\b",  
+        r"\bAdapter\b", 
+        r"\bFlash\b",  
+        r"Pro|Ultra|Extreme",
+        # r"\b(SanDisk|Sony|Kingston|Lexar|Intenso|Toshiba|Samsung)\b",
+        # r"\b\d+\.\d{1,2}\b",
     ]
+
     keys = []
-    if pd.notna(row[name_column_index]):
-        for pattern in patterns:
-            matches = re.findall(pattern, str(row[name_column_index]), re.IGNORECASE)
-            keys.extend([match.lower() for match in matches])
+    info = ' '.join([str(row[column]) for column in ['title'] if column in row])
+
+    for pattern in pattern_names:
+        matches = re.findall(pattern, info, re.IGNORECASE)
+        keys.extend([match.lower().strip() for match in matches])
+
     if not keys:
-        return ''
+        return None 
+        
     return ' '.join(sorted(set(keys))) 
 
 def create_blocks(df: pd.DataFrame):
