@@ -6,12 +6,6 @@ This repository contains a Python implementation for identifying and removing du
 
 - [Overview](#overview)
 - [Features](#features)
-- [Dependencies](#dependencies)
-- [Usage](#usage)
-- [Example](#example)
-- [Evaluation](#evaluation)
-- [License](#license)
-- [Contributing](#contributing)
 
 ## Overview
 
