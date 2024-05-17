@@ -12,22 +12,42 @@ import numpy as np
 import re
 
 name_column_name = 1 
-name_column_price = 2
-name_column_brand = 3
 
 def generate_blocking_key(row: pd.Series):
-    patterns = [
-        r"\b[A-Z0-9]{2,10}-[A-Z0-9]{2,10}\b",  # Specific product codes
-        r"\b\w+\b",                            # Any word
-    ]
+    """Generate a blocking key based on the 'name', 'brand'"""
+    patterns = {
+        'name': [
+            r"\b[A-Z0-9]{2,10}-[A-Z0-9]{2,10}\b",                   # Specific product codes
+            r"\b\w+\b",                                             # Any word
+            r"[A-Za-z]+\d+",                                        # Alphanumeric sequences
+            r"\d+[A-Za-z]+",                                        # Numeric followed by alphabets
+            r"[A-Za-z]+[^\w\s]+",                                   # Words with special characters
+            r"[^\w\s]+[A-Za-z]+",                                   # Special characters followed by words
+            r"\d+",                                                 # Numeric sequences
+            r'silver|white|black|blue|purple|burgundy|red|green'
+        ],
+        'brand': [
+            r"\b\w+\b",                                             # Any word
+            r"\b[A-Za-z]{2,}\b",                                    # Brand name with at least two characters
+            r"[A-Za-z]+\d+",                                        # Alphanumeric sequences in brand names
+            r"\d+[A-Za-z]+",                                        # Numeric followed by alphabets in brand names
+        ]
+    }
     keys = []
-    if pd.notna(row[name_column_name]):
-        for pattern in patterns:
-            matches = re.findall(pattern, str(row[name_column_name]), re.IGNORECASE)
+    
+    if pd.notna(row['name']):
+        for pattern in patterns['name']:
+            matches = re.findall(pattern, str(row['name']), re.IGNORECASE)
             keys.extend([match.lower() for match in matches])
+    
+    if pd.notna(row['brand']):
+        for pattern in patterns['brand']:
+            matches = re.findall(pattern, str(row['brand']), re.IGNORECASE)
+            keys.extend([match.lower() for match in matches])
+    
     if not keys:
         return ''
-    return ' '.join(sorted(set(keys)))  # Combining and sorting keys 
+    return ' '.join(sorted(set(keys))) 
 
 def create_blocks(df: pd.DataFrame):
     '''
