@@ -5,50 +5,82 @@ import pandas as pd
 import numpy as np
 import re
 
-patterns = {
-    'name': [
-        r'&(nbsp|amp|reg|[a-z]?acute|quot|trade);?|[|;:/,‰+©\(\)\\][psn]*|(?<=usb)[\s][m]*(?=[23][\.\s])|(?<=usb)-[\w]+\s(?=[23][\.\s])|(?<=[a-z])[\s]+gb|(?<=data|jump)[t\s](?=trave|drive)|(?<=extreme|exceria)[\s](?=pro[\s]|plus)|(?<=class)[\s_](?=10|[234]\b)|(?<=gen)[\s_](?=[134\s][0]*)',
-        r'(10 class|class 10|class(?=[\w]+10\b)|cl\s10)',
-        r'\b(msd|microvault|sd-karte|speicherkarte|minneskort|memóriakártya|flashgeheugenkaart|geheugenkaart|speicherkarten|memoriakartya|[-\s]+kaart|memory|memoria|memoire|mémoire|mamoria|tarjeta|carte|karta)',
-        r'\b(flash[\s-]*drive|flash[\s-]*disk|pen[\s]*drive|micro-usb|usb-flashstation|usb-flash|usb-minne|usb-stick|speicherstick|flashgeheugen|flash|vault)',
-        r'\b(adapter|adaptateur|adaptador|adattatore)',
-        r'silver|white|black|blue|purple|burgundy|red|green',
-        r'\b[0-9]{2,3}r[0-9]{2,3}w',
-        r'\b([\(]*[\w]+[-]*[\d]+[-]*[\w]+[-]*[\d+]*|[\d]+[\w]|[\w][\d]+)',
-        r'\b(intenso|lexar|logilink|pny|samsung|sandisk|kingston|sony|toshiba|transcend)\b',
-        r'\b(datatraveler|extreme[p]?|exceria[p]?|dual[\s]*(?!=sim)|evo|xqd|ssd|cruzer[\w+]*|glide|blade|basic|fit|force|basic line|jump\s?drive|hxs|rainbow|speed line|premium line|att4|attach|serie u|r-serie|beast|fury|impact|a400|sd[hx]c|uhs[i12][i1]*|note\s?9|ultra)',
-        r'\b(tv|(?<=dual[\s-])*sim|lte|[45]g\b|[oq]*led_[u]*hd|led|galaxy|iphone|oneplus|[0-9]{1,2}[.]*[0-9]*(?=[-\s]*["inch]+))',
-        r'([1-9]{1,3})[-\s]*[g][bo]?',
-        r'(thn-[a-z][\w]+|ljd[\w+][-][\w]+|ljd[sc][\w]+[-][\w]+|lsdmi[\d]+[\w]+|lsd[0-9]{1,3}[gb]+[\w]+|ljds[0-9]{2}[-][\w]+|usm[0-9]{1,3}[\w]+|sdsq[a-z]+[-][0-9]+[a-z]+[-][\w]+|sdsd[a-z]+[-][0-9]+[\w]+[-]*[\w]*|sdcz[\w]+|mk[\d]+|sr-g1[\w]+)',
-        r'\b(c20[mc]|sda[0-9]{1,2}|g1ux|s[72][05]|[unm][23]02|p20|g4|dt101|se9|[asm][0-9]{2})',
-        r'\b(usb[23]|type-c|uhs[i]{1,2}|class[0134]{1,2}|gen[1-9]{1,2}|u[23](?=[\s\.])|sd[hx]c|otg|lte|[45]g[-\s]lte|[0-9]+(?=-inch)|[0-9]{2,3}r[0-9]{2,3}w|[0-9]{2,3}(?=[\smbo/p]{3}))'
-    ],
-    'brand': [
-        r'\b(intenso|lexar|logilink|pny|samsung|sandisk|kingston|sony|toshiba|transcend)\b'
-    ]
+aliases_pattern = {
+    'class': ['classe', 'clase', 'clas ', 'klasse', 'cl '],
+    'uhsi': ['uhs1', 'uhs-i', 'ultra high-speed'],
+    'type-c': ['typec', 'type c', 'usb-c', 'usbc'],
+    'extreme': ['extrem'],
+    'att4': ['attach'],
+    'adapter': ['adapter', 'adaptateur', 'adaptador', 'adattatore'],
+    'memory': ['memoria', 'mémoire', 'memória', 'memoria', 'memory', 'geheugen', 'memoría', 'menor', 'mem', 'memoire', 'memoria'],
+    'flash drive': ['usb stick', 'usb flash drive', 'pen drive', 'usb drive', 'flash drive', 'flash disk', 'usb flash', 'usb stick', 'pen drive', 'usb-flash', 'pendrive', 'memory stick'],
+    'hard drive': ['harddisk', 'hard disk', 'hdd', 'external drive', 'external hard drive', 'hard disk drive', 'harddrive', 'disk drive'],
+    'ssd': ['solid state drive', 'ssd drive', 'solid-state drive', 'ssd disk'],
+    'micro sd': ['microsd', 'micro sd card', 'micro sdxc', 'micro sd hc', 'micro sdhc', 'micro sdxc'],
+    'sd card': ['sdcard', 'sd card', 'sd memory card', 'sdhc', 'sdxc', 'secure digital card'],
+    'usb': ['usb3', 'usb2', 'usb 3.0', 'usb 2.0', 'usb 3', 'usb 2', 'usb-c', 'usbc', 'type-c', 'type c'],
+    'portable': ['portátil', 'portatif', 'portatile', 'portabel', 'tragbar'],
+    'wireless': ['wireless', 'wireless', 'sin cables', 'sans fil', 'kabellos', 'draadloos', 'senza fili'],
+    'charger': ['charging', 'ladegerät', 'chargeur', 'caricatore', 'lader', 'charg'],
+    'camera': ['camcorder', 'kamera', 'cámara', 'caméra', 'fotocamera', 'videocamera', 'webcam', 'cam'],
+    'lens': ['objective', 'objektiv', 'lente', 'lentille', 'objetivo', 'linsen', 'lins'],
+    'screen': ['display', 'monitor', 'scherm', 'écran', 'pantalla', 'bildschirm'],
+    'battery': ['akku', 'batteria', 'batería', 'batterie', 'batterij', 'bat'],
+    'phone': ['smartphone', 'telefono', 'téléphone', 'telefone', 'handy', 'mobiltelefon', 'handtelefon', 'cell phone'],
+    'laptop': ['notebook', 'portátil', 'ordinateur portable', 'laptop', 'tragbarer computer'],
+    'tablet': ['tab', 'slate', 'pad', 'pills', 'tablette', 'tableta', 'tablet computer']
 }
 
-def clean_text(text):
-    text = text.lower()
-    text = re.sub(r'[^\w\s]', '', text)
+brand_pattern = r'\b(intenso|lexar|logilink|pny|samsung|sandisk|kingston|sony|toshiba|transcend)\b'
+
+model_patterns = [
+    r'\b([\(]*[\w]+[-]*[\d]+[-]*[\w]+[-]*[\d+]*|[\d]+[\w]|[\w][\d]+)',
+    r'\b(datatraveler|extreme[p]?|exceria[p]?|dual[\s]*(?!=sim)|evo|xqd|ssd|cruzer[\w+]*|glide|blade|basic|fit|force|basic line|jump\s?drive|hxs|rainbow|speed line|premium line|att4|attach|serie u|r-serie|beast|fury|impact|a400|sd[hx]c|uhs[i12][i1]*|note\s?9|ultra)',
+    r'(thn-[a-z][\w]+|ljd[\w+][-][\w]+|ljd[sc][\w]+[-][\w]+|lsdmi[\d]+[\w]+|lsd[0-9]{1,3}[gb]+[\w]+|ljds[0-9]{2}[-][\w]+|usm[0-9]{1,3}[\w]+|sdsq[a-z]+[-][0-9]+[a-z]+[-][\w]+|sdsd[a-z]+[-][0-9]+[\w]+[-]*[\w]*|sdcz[\w]+|mk[\d]+|sr-g1[\w]+)',
+    r'\b(c20[mc]|sda[0-9]{1,2}|g1ux|s[72][05]|[unm][23]02|p20|g4|dt101|se9|[asm][0-9]{2})'
+]
+
+color_pattern = r'\b(black|white|red|blue|green|yellow|pink|purple|orange|brown|gray|grey|silver|gold|beige|ivory|turquoise|violet|navy|teal|maroon|burgundy|magenta|cyan|lime|olive)\b'
+
+# Precompile patterns, enhances perfomance
+clean_brand = re.compile(brand_pattern)
+clean_models = [re.compile(pattern) for pattern in model_patterns]
+clean_color = re.compile(color_pattern)
+
+# Function to apply aliases
+def apply_aliases(text, aliases_pattern):
+    for key, aliases in aliases_pattern.items():
+        for alias in aliases:
+            text = re.sub(r'\b' + re.escape(alias) + r'\b', key, text)
     return text
 
+# Function to clean text
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'[^\w\s]', '', text)  # Remove non-alphanumeric characters
+    text = apply_aliases(text, aliases_pattern)  # Apply aliases
+    return text
+
+# Function to generate blocking key name
 def generate_blocking_key_name(row: pd.Series):
     keys = []
     
     # Process name field
     if pd.notna(row['name']):
         name_cleaned = clean_text(str(row['name']))
-        for pattern in patterns['name']:
-            matches = re.findall(pattern, name_cleaned)
+        matches = clean_brand.findall(name_cleaned)
+        keys.extend([match.lower() for match in matches])
+        for pattern in clean_models:
+            matches = pattern.findall(name_cleaned)
             keys.extend([match.lower() for match in matches])
+        matches = clean_color.findall(name_cleaned)
+        keys.extend([match.lower() for match in matches])
     
     # Process brand field
     if pd.notna(row['brand']):
         brand_cleaned = clean_text(str(row['brand']))
-        for pattern in patterns['brand']:
-            matches = re.findall(pattern, brand_cleaned)
-            keys.extend([match.lower() for match in matches])
+        matches = clean_brand.findall(brand_cleaned)
+        keys.extend([match.lower() for match in matches])
 
     if not keys:
         return ''
